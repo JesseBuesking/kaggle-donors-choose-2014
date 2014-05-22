@@ -149,10 +149,13 @@ class ModelRunner():
         cp.loc[:, 'score'] = [random.randint(0, 1) for _ in range(cp.shape[0])]
         rscore = self.auc_roc_score(cp)
 
+        def p(flt):
+            return '{:.5f}'.format(flt)
+
         # statistics
         ret = [
-            'Predicted score: {:8.5f}'.format(pscore),
-            'Random score: {:8.5f}'.format(rscore),
-            'Better than random: {:8.5f}'.format(pscore - rscore)
+            'Predicted score:      {}'.format(p(pscore)),
+            'Random score:         {}'.format(p(rscore)),
+            'Better than random:   {}'.format(p(pscore - rscore))
         ]
         return ret
