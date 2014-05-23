@@ -122,15 +122,11 @@ if __name__ == '__main__':
 
         pscore = mr.auc_roc_score(predictions)
 
+        last_few(pscore)
+
     # real run for submission
     else:
         predictions = mr.test_model()
-
-        stats = mr.stats(predictions)
-        print('')
-        for line in stats:
-            print(line)
-        save_stats(predictions, stats)
 
         # save to file
         oname = 'output/{}-{}-{}.csv'.format(
@@ -139,7 +135,3 @@ if __name__ == '__main__':
             git_hash
         )
         save_predictions(oname, predictions)
-
-        pscore = mr.auc_roc_score(predictions)
-
-    last_few(pscore)

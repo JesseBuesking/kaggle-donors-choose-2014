@@ -6,7 +6,6 @@ import random
 from datetime import date
 
 import pandas as pd
-import numpy as np
 import sklearn
 from sklearn.feature_extraction.text import TfidfVectorizer
 
@@ -25,7 +24,6 @@ models = {
 class ModelRunner():
 
     def __init__(self):
-        self.true_false = {np.nan: 2, 't': 1.0, 'f': 0.0}
         self.interesting_columns = [
             'projectid', 'school_metro', 'date_posted', 'essay_length',
             'school_charter', 'school_magnet', 'school_nlns', 'school_kipp',
@@ -35,11 +33,6 @@ class ModelRunner():
             'total_price_including_optional_support', 'poverty_level',
             'eligible_double_your_impact_match', 'eligible_almost_home_match',
             # 'essay'
-        ]
-        self.true_false_fields = [
-            'school_charter', 'school_magnet', 'school_nlns', 'school_kipp',
-            'school_charter_ready_promise', 'teacher_teach_for_america',
-            'eligible_double_your_impact_match', 'eligible_almost_home_match'
         ]
 
     def init(self, model_name='naive-essay-length'):
@@ -88,44 +81,24 @@ class ModelRunner():
         # merged['essay_length'] = merged.essay.map(lambda x: len(x))
         merged = merged[self.interesting_columns]
         merged.date_posted = pd.to_datetime(merged.date_posted)
-        merged = merged.reset_index().drop('index', 1)
         merged.fillna(-1, inplace=True)
         return merged
 
     def split_train_test(self, merged):
         self.train = merged[merged.date_posted < date(2014, 1, 1)]
+        self.train = self.train.reset_index().drop('index', 1)
         self.test = merged[merged.date_posted >= date(2014, 1, 1)]
+        self.test = self.test.reset_index().drop('index', 1)
 
-    def vectorize_target(self, df, columns):
-        tf = df[columns]
-        frame_as_dicts = [dict(x.iteritems()) for _, x in tf.iterrows()]
-        vectorized_frame = pd.DataFrame(frame_as_dicts)
-        result_frame = pd.concat([df, vectorized_frame], axis=1)
-        result_frame = result_frame.drop(columns, axis=1)
-        return result_frame
-
-    def to_numeric(self, df):
-        df = df.drop('projectid', 1)
-        df = df.drop('date_posted', 1)
-
-        for feature in self.true_false_fields:
-            df[feature] = df[feature].map(lambda x: self.true_false[x])
-
-        fields_to_vectorize = [
-            'teacher_prefix', 'school_metro', 'poverty_level']
-
-        df = self.vectorize_target(df, fields_to_vectorize)
-        return df
-
-    def preprocess(self):
-    # self.train = self.to_numeric(self.train)
-    # self.test = self.to_numeric(self.test)
-        tf = TfidfVectorizer(min_df=3, max_features=1000)
-
-        tf.fit(self.train.essay)
-        self.tr = tf.transform(self.train.essay)
-        self.ts = tf.transform(self.test.essay)
-        print(self.tr)
+    # def preprocess(self):
+    #     # self.train = self.to_numeric(self.train)
+    #     # self.test = self.to_numeric(self.test)
+    #     tf = TfidfVectorizer(min_df=3, max_features=1000)
+    #
+    #     tf.fit(self.train.essay)
+    #     self.tr = tf.transform(self.train.essay)
+    #     self.ts = tf.transform(self.test.essay)
+    #     print(self.tr)
 
     def auc_roc_score(self, predictions):
         # noinspection PyCallingNonCallable
