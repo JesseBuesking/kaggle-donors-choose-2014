@@ -15,13 +15,20 @@ class SGDModel(object):
 
     def prep(self, df):
         cp = df.copy()
+        # print(self.train.head())
+        # raise Exception()
         cp = cp.drop('projectid', 1)
         cp = cp.drop('date_posted', 1)
         cp = to_numeric(cp)
         cp = cp.fillna(-1)
+        print(cp.columns.tolist())
+        cp = cp[
+            ['essay_length', 'total_price_including_optional_support']
+        ].values
         return cp
 
     def fit(self, data):
+        print('is_exciting', len(self.outcomes.is_exciting.values))
         self.model = self.model.fit(
             self.prep(data),
             self.outcomes.is_exciting.values
@@ -38,7 +45,8 @@ class SGDModel(object):
 
     def train_model(self):
         # TODO split train into groups for training and testing
-        self.model = SGDClassifier(alpha=0.001, n_iter=100, shuffle=True)
+        self.model = SGDClassifier(alpha=0.0001, n_iter=100,
+                                   penalty='l1', shuffle=True)
         self.fit(self.train)
 
         return self.predict(self.train)

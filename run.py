@@ -4,6 +4,7 @@ import argparse
 from datetime import datetime
 from genericpath import exists
 import os
+import random
 import sys
 from kaggle_donors_choose_2014.model_runner import ModelRunner, models
 
@@ -53,10 +54,28 @@ def parse_args():
     )
 
     p.add_argument(
+        '--sample',
+        dest='sample',
+        action='store',
+        type=int,
+        default=None,
+        help='sample size to use (to speed up dev)'
+    )
+
+    p.add_argument(
         '--submit',
         dest='submit',
         action='store_true',
         help='toggle on to run for a submission'
+    )
+
+    p.add_argument(
+        '--seed',
+        dest='seed',
+        action='store',
+        type=int,
+        default=None,
+        help='seed for random number generator'
     )
 
     args = p.parse_args()
@@ -95,6 +114,8 @@ def last_few(pscore):
 
 if __name__ == '__main__':
     args = parse_args()
+    if args.seed is not None:
+        random.seed(args.seed)
 
     mr = ModelRunner()
 
@@ -104,7 +125,7 @@ if __name__ == '__main__':
             model_name,
             '\n  '.join(models.keys())
         ))
-    mr.init(model_name)
+    mr.init(model_name, num_sample=args.sample)
 
     # train
     if not args.submit:
@@ -120,7 +141,7 @@ if __name__ == '__main__':
             print(line)
         save_stats(sname, stats)
 
-        pscore = mr.auc_roc_score(predictions)
+        _, pscore = mr.auc_roc_score(predictions)
 
         last_few(pscore)
 
